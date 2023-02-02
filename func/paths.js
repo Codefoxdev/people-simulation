@@ -4,16 +4,17 @@ const types = {
   bike: 2,
   car: 3,
   truck: 4,
-}
+};
 const colors = [
   "white",
   "rgb(126, 217, 87)",
   "rgb(92, 225, 230)",
   "rgb(140, 82, 255)",
-  "rgb(255, 145, 77)"
-]
+  "rgb(255, 145, 77)",
+];
 const coords = [
-  { // Rijnstraat
+  {
+    // Rijnstraat
     points: [
       [130, 65],
       [240, 120],
@@ -21,105 +22,139 @@ const coords = [
       [390, 300],
       [460, 405],
       [520, 460],
-      [580, 475],
-      [680, 480],
-      [695, 500]
     ],
     width: 18,
-    types: [types.pedestrian, types.bike]
+    types: [types.pedestrian, types.bike],
   },
-  { // Meulmansweg
+  {
+    // Rijnstraat vervolg
     points: [
-      [110,0],
-      [130,65],
-      [110,110],
+      [695, 500],
+      [680, 480],
+      [580, 475],
+      [520, 460],
+    ],
+    width: 10,
+    types: [types.car, types.truck, types.pedestrian, types.bike],
+    oneway: true,
+  },
+  {
+    // Meulmansweg
+    points: [
+      [110, 0],
+      [130, 65],
+      [110, 110],
       [0, 320],
     ],
     width: 8,
     types: [types.pedestrian, types.bike, types.car, types.truck],
+    oneway: true,
   },
-  { // Wagenstraat
+  {
+    // Wagenstraat
     points: [
       [520, 460],
       [505, 505],
-      [505, 529]
+      [505, 529],
     ],
     width: 8,
-    types: [types.pedestrian, types.bike, types.car, types.truck]
+    types: [types.pedestrian, types.bike, types.car, types.truck],
+    oneway: true,
   },
-  { // Plantsoen / Wilhelminaweg
+  {
+    // Plantsoen / Wilhelminaweg
     points: [
-      [680, 0],
-      [765, 370],
-      [790, 400],
-      [790, 430],
-      [770, 455],
-      [710, 480],
+      [692, 529],
       [695, 500],
-      [692, 529]
+      [710, 480],
+      [770, 455],
+      [790, 430],
+      [790, 400],
+      [765, 370],
+      [680, 0],
     ],
     width: 8,
-    types: [types.pedestrian, types.bike, types.car, types.truck]
+    types: [types.pedestrian, types.bike, types.car, types.truck],
+    oneway: true,
   },
-  { // Havenstraat
+  {
+    // Havenstraat
     points: [
-      [110,110],
-      [190,160],
-      [240,200],
-      [320,310],
-      [335,340],
-      [370,420],
-      [370,450],
-      [355,520],
-      [355,529]
+      [355, 529],
+      [355, 520],
+      [370, 450],
+      [370, 420],
+      [335, 340],
+      [320, 310],
+      [240, 200],
+      [190, 160],
+      [110, 110],
     ],
     width: 8,
-    types: [types.pedestrian, types.bike, types.car, types.truck]
+    types: [types.pedestrian, types.bike, types.car, types.truck],
+    oneway: true,
   },
-  { // Voorstraat
+  {
+    // Voorstraat
     points: [
-      [110,0],
-      [180,10],
-      [300,75],
-      [400,175],
-      [460,255],
-      [570,380],
-      [650,410],
-      [755,400],
-      [765,370]
+      [110, 0],
+      [180, 10],
+      [300, 75],
+      [400, 175],
+      [460, 255],
+      [570, 380],
+      [650, 410],
+      [755, 400],
+      [765, 370],
     ],
     width: 8,
-    types: [types.pedestrian, types.bike]
+    types: [types.pedestrian, types.bike],
   },
-  { // Kerkplein / Kruisstraat
+  {
+    // Kerkplein / Kruisstraat
     points: [
-      [180,430],
-      [335,340],
-      [390,300],
-      [460,255],
-      [530,170],
+      [180, 430],
+      [335, 340],
+      [390, 300],
+      [460, 255],
+      [530, 170],
     ],
     width: 8,
-    types: [types.pedestrian, types.bike]
-  }
+    types: [types.pedestrian, types.bike],
+  },
 ];
 const spawnCoords = [
   {
-    point: [110,0],
+    point: [110, 0],
     amount: 50,
     types: [types.car, types.truck, types.pedestrian, types.bike],
   },
   {
-    point: [0,320],
+    point: [0, 320],
     amount: 25,
     types: [types.pedestrian, types.bike],
   },
   {
-    point: [355,529],
+    point: [355, 529],
     amount: 15,
     types: [types.pedestrian, types.bike, types.car, types.truck],
   },
-]
+  {
+    point: [180, 430],
+    amount: 20,
+    types: [types.pedestrian, types.bike],
+  },
+  {
+    point: [530, 170],
+    amount: 20,
+    types: [types.pedestrian, types.bike],
+  },
+  {
+    point: [692, 529],
+    amount: 35,
+    types: [types.car, types.truck, types.pedestrian, types.bike],
+  },
+];
 const intersections = calculateIntersections();
 
 const dashLength = 32;
@@ -137,7 +172,10 @@ function draw(ctx) {
       ctx.lineWidth = item.width;
 
       for (let c = 0; c < item.types.length; c++) {
-        ctx.setLineDash([dashLength, (item.types.length * dashLength) - dashLength]);
+        ctx.setLineDash([
+          dashLength,
+          item.types.length * dashLength - dashLength,
+        ]);
         ctx.lineDashOffset = dashLength * c;
         ctx.strokeStyle = colors[item.types[c]] ?? colors[0];
 
@@ -167,7 +205,7 @@ function calculateIntersections() {
       if (i == u) continue;
       let commonPoints = findCommonPoints(coords[i], coords[u]);
       if (commonPoints.length < 1) continue;
-      commonPoints.forEach(point => {
+      commonPoints.forEach((point) => {
         intersect.push(point);
       });
     }
@@ -176,16 +214,20 @@ function calculateIntersections() {
   return intersect;
 }
 /**
- * 
- * @param {Array} points 
- * @returns 
+ *
+ * @param {Array} points
+ * @returns
  */
 function filter(points) {
   let filteredPoints = [];
   for (let i = 0; i < points.length; i++) {
     let added = false;
     for (let p = 0; p < filteredPoints.length; p++) {
-      if ((points[i][0] == filteredPoints[p][0]) && (points[i][1] == filteredPoints[p][1])) added = true;
+      if (
+        points[i][0] == filteredPoints[p][0] &&
+        points[i][1] == filteredPoints[p][1]
+      )
+        added = true;
     }
     if (filteredPoints.length < 1) added = false;
     if (!added) filteredPoints.push(points[i]);
@@ -206,7 +248,11 @@ function findCommonPoints(path1, path2) {
   let commonPoints = [];
   for (let i1 = 0; i1 < path1Count; i1++) {
     for (let i2 = 0; i2 < path2Count; i2++) {
-      if (path1.points[i1][0] == path2.points[i2][0] && path1.points[i1][1] == path2.points[i2][1]) commonPoints.push(path1.points[i1]);
+      if (
+        path1.points[i1][0] == path2.points[i2][0] &&
+        path1.points[i1][1] == path2.points[i2][1]
+      )
+        commonPoints.push(path1.points[i1]);
     }
   }
   return commonPoints;
@@ -215,5 +261,5 @@ function findCommonPoints(path1, path2) {
 export default {
   coords,
   intersections,
-  draw
-}
+  draw,
+};
