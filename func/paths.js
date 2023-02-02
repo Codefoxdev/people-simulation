@@ -195,6 +195,9 @@ function draw(ctx) {
     ctx.arc(item.point[0], item.point[1], item.amount / 2, 0, Math.PI * 2);
     ctx.fill();
   });
+
+
+  console.log(calculatePath(0, types.none));
 }
 
 function calculateIntersections() {
@@ -212,6 +215,22 @@ function calculateIntersections() {
   }
   intersect = filter(intersect);
   return intersect;
+}
+
+function calculatePath(spawnpointIndex, type) {
+  if (!spawnCoords[spawnpointIndex]) return null;
+  const startPoint = spawnCoords[spawnpointIndex];
+  let connectedPathIndices = [];
+  // Check if spawnpoint connected to a path
+  for (let i = 0; i < coords.length; i++) {
+    coords[i].points.forEach(coord => {
+      if (coord[0] == startPoint.point[0] && coord[1] == startPoint.point[1]) connectedPathIndices.push(coords[i]);
+    });
+  }
+
+  console.log(connectedPathIndices);
+  
+  // calculate ways it can go
 }
 /**
  *
@@ -260,6 +279,7 @@ function findCommonPoints(path1, path2) {
 
 export default {
   coords,
+  spawnCoords,
   intersections,
   draw,
 };
