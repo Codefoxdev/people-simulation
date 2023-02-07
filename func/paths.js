@@ -14,7 +14,7 @@ const colors = [
 ];
 const coords = [
   {
-    // Rijnstraat
+    name: "Rijnstraat",
     points: [
       [130, 65],
       [240, 120],
@@ -27,7 +27,7 @@ const coords = [
     types: [types.pedestrian, types.bike],
   },
   {
-    // Rijnstraat vervolg
+    name: "Rijnstraat vervolg",
     points: [
       [695, 500],
       [680, 480],
@@ -39,7 +39,7 @@ const coords = [
     oneway: true,
   },
   {
-    // Meulmansweg
+    name: "Meulmansweg",
     points: [
       [110, 0],
       [130, 65],
@@ -51,7 +51,7 @@ const coords = [
     oneway: true,
   },
   {
-    // Wagenstraat
+    name: "Wagenstraat",
     points: [
       [520, 460],
       [505, 505],
@@ -62,7 +62,7 @@ const coords = [
     oneway: true,
   },
   {
-    // Plantsoen / Wilhelminaweg
+    name: "Plantsoen / Wilhelminaweg",
     points: [
       [692, 529],
       [695, 500],
@@ -78,7 +78,7 @@ const coords = [
     oneway: true,
   },
   {
-    // Havenstraat
+    name: "Havenstraat",
     points: [
       [355, 529],
       [355, 520],
@@ -95,7 +95,7 @@ const coords = [
     oneway: true,
   },
   {
-    // Voorstraat
+    name: "Voorstraat",
     points: [
       [110, 0],
       [180, 10],
@@ -111,7 +111,7 @@ const coords = [
     types: [types.pedestrian, types.bike],
   },
   {
-    // Kerkplein / Kruisstraat
+    name: "Kerkplein / Kruisstraat",
     points: [
       [180, 430],
       [335, 340],
@@ -231,6 +231,10 @@ function calculatePath(spawnpointIndex, type) {
   console.log(connectedPathIndices);
   
   // calculate ways it can go
+}
+
+function findConnectedToPaths(pathIndex, type) {
+
 }
 /**
  *
