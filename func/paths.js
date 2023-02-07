@@ -158,6 +158,7 @@ const spawnCoords = [
 const intersections = calculateIntersections();
 
 const dashLength = 32;
+const ctx = document.querySelector("canvas").getContext("2d");
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -196,8 +197,59 @@ function draw(ctx) {
     ctx.fill();
   });
 
-
   console.log(calculatePath(0, types.none));
+}
+
+/**
+ * @param {number} pathIndex 
+ * @param {boolean} drawTypes 
+ */
+function drawPath(pathIndex, drawTypes) {
+  const item = coords[pathIndex];
+  if (!item) return null;
+  const count = item.points.length;
+  if (count >= 1) {
+    ctx.lineJoin = "round";
+    ctx.lineWidth = item.width;
+
+    for (let c = 0; c < item.types.length; c++) {
+      if (drawTypes == true) {
+        ctx.setLineDash([
+          dashLength,
+          item.types.length * dashLength - dashLength,
+        ]);
+        ctx.lineDashOffset = dashLength * c;
+        ctx.strokeStyle = colors[item.types[c]] ?? colors[0];
+      } else {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "black";
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(item.points[0][0], item.points[0][1]);
+      for (let i = 0; i < count - 1; i++) {
+        ctx.lineTo(item.points[i + 1][0], item.points[i + 1][1]);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+function drawSpawnPoint(spawnpointIndex, drawTypes) {
+  const item = spawnCoords[spawnpointIndex];
+  ctx.beginPath();
+  if (drawTypes == true) ctx.fillStyle = colors[item.types[0]];
+  else ctx.fillStyle = 'black';
+  ctx.arc(item.point[0], item.point[1], item.amount / 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawIntersection(intersectionIndex) {
+  const item = intersections[intersectionIndex];
+  ctx.beginPath();
+  ctx.fillStyle = 'gray';
+  ctx.arc(item[0], item[1], 10 / 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function calculateIntersections() {
@@ -223,23 +275,35 @@ function calculatePath(spawnpointIndex, type) {
   let connectedPathIndices = [];
   // Check if spawnpoint connected to a path
   for (let i = 0; i < coords.length; i++) {
-    coords[i].points.forEach(coord => {
+    coords[i].points.forEach((coord) => {
       if (coord[0] == startPoint.point[0] && coord[1] == startPoint.point[1]) connectedPathIndices.push(coords[i]);
     });
   }
 
-  console.log(connectedPathIndices);
-  
-  // calculate ways it can go
+  drawSpawnPoint(spawnpointIndex);
+  // Draw connected paths
+  connectedPathIndices.forEach(path => {
+    drawPath(coords.indexOf(path));
+    findConnectedIntersections(coords.indexOf(path));
+  });
 }
 
-function findConnectedToPaths(pathIndex, type) {
+function findConnectedIntersections(pathIndex) {
+  const path = coords[pathIndex];
+  if (!path) return null;
 
+  path.points.forEach(point => {
+    intersections.forEach((intersection, intersectionIndex) => {
+      const connected = comparePoints(point, intersection);
+      if (connected) {
+        drawIntersection(intersectionIndex);
+      }
+    });
+  });
 }
+
 /**
- *
  * @param {Array} points
- * @returns
  */
 function filter(points) {
   let filteredPoints = [];
@@ -283,7 +347,9 @@ function findCommonPoints(path1, path2) {
 
 export default {
   coords,
+  types,
   spawnCoords,
   intersections,
   draw,
+  calculatePath,
 };
