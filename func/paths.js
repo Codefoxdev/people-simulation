@@ -269,7 +269,7 @@ function calculateIntersections() {
   return intersect;
 }
 
-function calculatePath(spawnpointIndex, type) {
+function calculatePath(spawnpointIndex, type, depth) {
   if (!spawnCoords[spawnpointIndex]) return null;
   const startPoint = spawnCoords[spawnpointIndex];
   let connectedPathIndices = [];
@@ -284,22 +284,53 @@ function calculatePath(spawnpointIndex, type) {
   // Draw connected paths
   connectedPathIndices.forEach(path => {
     drawPath(coords.indexOf(path));
-    findConnectedIntersections(coords.indexOf(path));
+    findConnectedIntersections(coords.indexOf(path), true);
+    // Find connected paths until depth = 0
+    findConnectedPaths(coords.indexOf(path), true, 2);
   });
+  for (let i = 1; i < depth; i++) {
+
+  }
 }
 
-function findConnectedIntersections(pathIndex) {
+function findConnectedPaths(pathIndex, draw, depth) {
+  let connectedPathsIndices = [];
+  let intersections = findConnectedIntersections(pathIndex, true);
+
+  for (let i = 0; i < coords.length; i++) {
+    coords[i].points.forEach((coord) => {
+      intersections.forEach((interSect) => {
+        if (coord[0] == interSect[0] && coord[1] == interSect[1]) connectedPathsIndices.push(i);
+      });
+    })
+  }
+
+  console.log(connectedPathsIndices);
+  connectedPathsIndices.forEach(path => {
+    drawPath(path);
+  });
+
+  depth--;
+  if (depth > 0) {
+    connectedPathsIndices.forEach(path => {
+      findConnectedPaths(coords.indexOf(path), draw, depth);
+    });
+  }
+}
+
+function findConnectedIntersections(pathIndex, draw) {
   const path = coords[pathIndex];
+  let foundIntersect = []
   if (!path) return null;
 
   path.points.forEach(point => {
     intersections.forEach((intersection, intersectionIndex) => {
       const connected = comparePoints(point, intersection);
-      if (connected) {
-        drawIntersection(intersectionIndex);
-      }
+      if (connected && draw) drawIntersection(intersectionIndex);
+      if (connected) foundIntersect.push(point);
     });
   });
+  return foundIntersect;
 }
 
 /**
