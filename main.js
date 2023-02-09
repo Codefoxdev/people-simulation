@@ -12,4 +12,4 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 ctx.drawImage(img, 0, 0, 800, 529);
 
 //paths.draw(ctx);
-paths.calculatePath(1, types.pedestrian, 3);
+paths.calculatePath(0, types.pedestrian, 3, true);

@@ -4,6 +4,9 @@ const types = {
   bike: 2,
   car: 3,
   truck: 4,
+
+  nonVehicles: 9,
+  all: 10
 };
 const colors = [
   "white",
@@ -159,6 +162,7 @@ const intersections = calculateIntersections();
 
 const dashLength = 32;
 const ctx = document.querySelector("canvas").getContext("2d");
+let drawnPathIndices = [];
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -204,7 +208,8 @@ function draw(ctx) {
  * @param {number} pathIndex 
  * @param {boolean} drawTypes 
  */
-function drawPath(pathIndex, drawTypes) {
+function drawPath(pathIndex, drawTypes = false, overRideTypes = null) {
+  if (drawnPathIndices.includes(pathIndex)) return;
   const item = coords[pathIndex];
   if (!item) return null;
   const count = item.points.length;
@@ -212,14 +217,21 @@ function drawPath(pathIndex, drawTypes) {
     ctx.lineJoin = "round";
     ctx.lineWidth = item.width;
 
-    for (let c = 0; c < item.types.length; c++) {
+    let typesToDraw = item.types;
+    if (overRideTypes != null) {
+      if (overRideTypes == types.all) typesToDraw = [ types.car, types.truck, types.pedestrian, types.bike ];
+      else if (overRideTypes == types.nonVehicles) typesToDraw = [ types.pedestrian, types.bike ];
+      else if (overRideTypes == types.car || overRideTypes == types.truck || overRideTypes == types.pedestrian || overRideTypes == types.bike) typesToDraw = overRideTypes;
+    }
+
+    for (let c = 0; c < typesToDraw.length; c++) {
       if (drawTypes == true) {
         ctx.setLineDash([
           dashLength,
-          item.types.length * dashLength - dashLength,
+          typesToDraw.length * dashLength - dashLength,
         ]);
         ctx.lineDashOffset = dashLength * c;
-        ctx.strokeStyle = colors[item.types[c]] ?? colors[0];
+        ctx.strokeStyle = colors[typesToDraw[c]] ?? colors[0];
       } else {
         ctx.lineWidth = 2;
         ctx.strokeStyle = "black";
@@ -233,6 +245,7 @@ function drawPath(pathIndex, drawTypes) {
       ctx.stroke();
     }
   }
+  drawnPathIndices.push(pathIndex);
 }
 
 function drawSpawnPoint(spawnpointIndex, drawTypes) {
@@ -269,8 +282,10 @@ function calculateIntersections() {
   return intersect;
 }
 
-function calculatePath(spawnpointIndex, type, depth) {
+function calculatePath(spawnpointIndex, type, depth, drawTypes = false) {
   if (!spawnCoords[spawnpointIndex]) return null;
+  drawSpawnPoint(spawnpointIndex);
+  if (!type) return null;
   const startPoint = spawnCoords[spawnpointIndex];
   let connectedPathIndices = [];
   // Check if spawnpoint connected to a path
@@ -280,42 +295,47 @@ function calculatePath(spawnpointIndex, type, depth) {
     });
   }
 
-  drawSpawnPoint(spawnpointIndex);
   // Draw connected paths
   connectedPathIndices.forEach(path => {
-    drawPath(coords.indexOf(path));
+    drawPath(coords.indexOf(path), drawTypes, moveAbleTypes(coords.indexOf(path), startPoint.point));
     findConnectedIntersections(coords.indexOf(path), true);
     // Find connected paths until depth = 0
-    findConnectedPaths(coords.indexOf(path), true, 2);
+    findConnectedPaths(coords.indexOf(path), true, depth - 1, drawTypes);
   });
-  for (let i = 1; i < depth; i++) {
-
-  }
 }
 
-function findConnectedPaths(pathIndex, draw, depth) {
+function findConnectedPaths(pathIndex, draw, depth, drawTypes = false) {
+  if (depth <= 0) return;
   let connectedPathsIndices = [];
   let intersections = findConnectedIntersections(pathIndex, true);
 
   for (let i = 0; i < coords.length; i++) {
     coords[i].points.forEach((coord) => {
-      intersections.forEach((interSect) => {
-        if (coord[0] == interSect[0] && coord[1] == interSect[1]) connectedPathsIndices.push(i);
-      });
+      if (intersections) {
+        intersections.forEach((interSect) => {
+          if (coord[0] == interSect[0] && coord[1] == interSect[1]) connectedPathsIndices.push(i);
+        });
+      }
     })
   }
 
-  console.log(connectedPathsIndices);
   connectedPathsIndices.forEach(path => {
-    drawPath(path);
+    drawPath(path, drawTypes);
   });
 
   depth--;
-  if (depth > 0) {
+  if (depth > 0 && !(drawnPathIndices.length >= coords.length)) {
     connectedPathsIndices.forEach(path => {
-      findConnectedPaths(coords.indexOf(path), draw, depth);
+      findConnectedPaths(path, draw, depth, drawTypes);
     });
   }
+}
+
+function moveAbleTypes(pathIndex, point) {
+  const path = coords[pathIndex];
+  if (path.oneway == false) return types.all;
+  if (comparePoints(path.points[path.points.length - 1], point)) return types.nonVehicles;
+  return types.all;
 }
 
 function findConnectedIntersections(pathIndex, draw) {
