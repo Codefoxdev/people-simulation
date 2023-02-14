@@ -20,10 +20,20 @@ const coords = [
     name: "Rijnstraat",
     points: [
       [130, 65],
+      [161, 80], 
+      [191, 95],
+      [219, 110], 
       [240, 120],
+      [274, 149], 
+      [300, 175],
+      [325, 201],
       [350, 230],
+      [377, 269], 
       [390, 300],
+      [413, 330], 
+      [432, 360], 
       [460, 405],
+      [487, 432], 
       [520, 460],
     ],
     width: 18,
@@ -108,7 +118,7 @@ const coords = [
       [570, 380],
       [650, 410],
       [755, 400],
-      [765, 370],
+      [790, 400],
     ],
     width: 8,
     types: [types.pedestrian, types.bike],
@@ -158,50 +168,74 @@ const spawnCoords = [
     types: [types.car, types.truck, types.pedestrian, types.bike],
   },
 ];
+const shopCoords = [
+  [180,75],
+  [204,88],
+  [219,96],
+  [234,105],
+  [245,112],
+  [257,119],
+  [271,129],
+  [291,146],
+  [307,162],
+  [313,170],
+  [329,186], 
+  [336,196], 
+  [349,213], 
+  [365,233],
+  [384,259], 
+  [392,269], 
+  [398,280], 
+  [419,301], 
+  [425,322], 
+  [433,333], 
+  [441,344], 
+  [453,363], 
+  [462,382], 
+  [471,393], 
+  [480,405], 
+  [492,416], 
+  [506,427], 
+  [155,91], 
+  [167,97], 
+  [177,102], 
+  [186,106], 
+  [196,113], 
+  [218,125], 
+  [235,136], 
+  [250,150], 
+  [269,169], 
+  [284,181], 
+  [304,203], 
+  [327,228], 
+  [342,246], 
+  [350,260], 
+  [358,271], 
+  [374,292], 
+  [394,331], 
+  [409,355], 
+  [418,373], 
+  [427,389], 
+  [442,410], 
+  [452,424], 
+  [467,440], 
+  [483,452], 
+];
 const intersections = calculateIntersections();
 
 const dashLength = 32;
 const ctx = document.querySelector("canvas").getContext("2d");
 let drawnPathIndices = [];
 
-/**
- * @param {CanvasRenderingContext2D} ctx
- */
-function draw(ctx) {
-  // Draw Paths
-  coords.forEach((item, index) => {
-    const count = item.points.length;
-    if (count >= 1) {
-      ctx.strokeStyle = colors[item.types[0]] ?? colors[0];
-      ctx.lineJoin = "round";
-      ctx.lineWidth = item.width;
-
-      for (let c = 0; c < item.types.length; c++) {
-        ctx.setLineDash([
-          dashLength,
-          item.types.length * dashLength - dashLength,
-        ]);
-        ctx.lineDashOffset = dashLength * c;
-        ctx.strokeStyle = colors[item.types[c]] ?? colors[0];
-
-        ctx.beginPath();
-        ctx.moveTo(item.points[0][0], item.points[0][1]);
-        for (let i = 0; i < count - 1; i++) {
-          ctx.lineTo(item.points[i + 1][0], item.points[i + 1][1]);
-        }
-        ctx.stroke();
-      }
-    }
-  });
-  // Draw spawnpoints
-  spawnCoords.forEach((item, index) => {
+function drawShops() {
+  shopCoords.forEach(shop => {
     ctx.beginPath();
-    ctx.fillStyle = colors[item.types[0]];
-    ctx.arc(item.point[0], item.point[1], item.amount / 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgb(120, 120, 120)';
+    ctx.arc(shop[0], shop[1], 6 / 2, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  console.log(calculatePath(0, types.none));
+  calculatePathToShop(spawnCoords[0] ,shopCoords[shopCoords.length - 1]);
 }
 
 /**
@@ -329,6 +363,24 @@ function findConnectedPaths(pathIndex, draw, depth, drawTypes = false) {
       findConnectedPaths(path, draw, depth, drawTypes);
     });
   }
+
+}
+
+function calculateConnectedPaths(pathIndex) {
+  let connectedPathsIndices = [];
+  let intersections = findConnectedIntersections(pathIndex, true);
+
+  for (let i = 0; i < coords.length; i++) {
+    coords[i].points.forEach((coord) => {
+      if (intersections) {
+        intersections.forEach((interSect) => {
+          if (coord[0] == interSect[0] && coord[1] == interSect[1]) connectedPathsIndices.push(i);
+        });
+      }
+    })
+  }
+
+  return new Set(connectedPathsIndices);
 }
 
 function moveAbleTypes(pathIndex, point) {
@@ -336,6 +388,26 @@ function moveAbleTypes(pathIndex, point) {
   if (path.oneway == false) return types.all;
   if (comparePoints(path.points[path.points.length - 1], point)) return types.nonVehicles;
   return types.all;
+}
+
+function findPathByPoint(point) {
+  let returnType = -1;
+  coords.forEach((path, pathIndex) => {
+    path.points.forEach((pathPoint, pointIndex) => {
+      if (comparePoints(point, pathPoint)) returnType = pathIndex;
+    });
+  });
+  return returnType;
+}
+
+function findPathsByPoint(point) {
+  let returnType = [];
+  coords.forEach((path, pathIndex) => {
+    path.points.forEach((pathPoint, pointIndex) => {
+      if (comparePoints(point, pathPoint)) returnType.push(pathIndex);
+    });
+  });
+  return returnType;
 }
 
 function findConnectedIntersections(pathIndex, draw) {
@@ -351,6 +423,100 @@ function findConnectedIntersections(pathIndex, draw) {
     });
   });
   return foundIntersect;
+}
+
+function findClosestPointOnPath(point) {
+  let shortestDistance = 1000;
+  let closestPointIndex = 0;
+  let closestPathIndex = 0;
+  coords.forEach((path, pathIndex) => {
+    path.points.forEach((pathPoint, pointIndex) => {
+      let a = point[0] - pathPoint[0];
+      let b = point[1] - pathPoint[1];
+      let c = Math.hypot(a, b);
+      if (c < shortestDistance) {
+        shortestDistance = c;
+        closestPointIndex = pointIndex;
+        closestPathIndex = pathIndex;
+      }
+    });
+  });
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(point[0], point[1]);
+  ctx.lineTo(coords[closestPathIndex].points[closestPointIndex][0], coords[closestPathIndex].points[closestPointIndex][1]);
+  ctx.stroke();
+
+  return coords[closestPathIndex].points[closestPointIndex];
+}
+
+function calculatePathToShop(startPoint, shopPoint) {
+  const targetShopPoint = findClosestPointOnPath(shopPoint);
+  const targetPathIndex = findPathByPoint(targetShopPoint);
+  const connectedPaths = calculateConnectedPaths(targetPathIndex);
+
+  let startPathIndex = -1;
+  connectedPaths.forEach(path => {
+    const pathPoints = coords[path].points;
+    pathPoints.forEach(pathPoint => {
+      if (comparePoints(startPoint.point, pathPoint)) startPathIndex = path;
+    });
+  });
+
+  if (startPathIndex == -1) return false;
+  let startPathPoints = coords[startPathIndex].points;
+  let targetPathPoints = coords[targetPathIndex].points;
+
+  if (!comparePoints(startPoint.point, startPathPoints[0])) startPathPoints.reverse();
+
+  ctx.strokeStyle = "rgba(255, 0, 0, .05)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(startPoint.point[0], startPoint.point[1]);
+  for (let i = 0; i < startPathPoints.length; i++) {
+    if (findPathsByPoint(startPathPoints[i]).includes(targetPathIndex)) {
+      for (let s = 0; s < targetPathPoints.length; s++) {
+        ctx.lineTo(targetPathPoints[s][0], targetPathPoints[s][1]);
+        if (comparePoints(targetShopPoint, targetPathPoints[s])) {
+          ctx.lineTo(shopPoint[0], shopPoint[1]);
+          break;
+        }
+      }
+      break;
+    } else {
+      ctx.lineTo(startPathPoints[i][0], startPathPoints[i][1]);
+    }
+  }
+  ctx.stroke();
+}
+
+let path = [];
+function calculatePathToPoint(startPoint, endPoint, depth) {
+  if (depth <= 0) return;
+  let connectedPathsIndices = [];
+  let intersections = findConnectedIntersections(pathIndex, true);
+
+  for (let i = 0; i < coords.length; i++) {
+    coords[i].points.forEach((coord) => {
+      if (intersections) {
+        intersections.forEach((interSect) => {
+          if (coord[0] == interSect[0] && coord[1] == interSect[1]) connectedPathsIndices.push(i);
+        });
+      }
+    })
+  }
+
+  connectedPathsIndices.forEach(path => {
+    drawPath(path, drawTypes);
+  });
+
+  depth--;
+  if (depth > 0) {
+    connectedPathsIndices.forEach(path => {
+      calculatePathToPoint(startPoint, endPoint, depth);
+    });
+  }
 }
 
 /**
@@ -397,10 +563,13 @@ function findCommonPoints(path1, path2) {
 }
 
 export default {
+  colors,
   coords,
   types,
   spawnCoords,
+  shopCoords,
   intersections,
-  draw,
+  drawShops,
   calculatePath,
+  calculatePathToShop,
 };
