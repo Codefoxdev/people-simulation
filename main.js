@@ -12,6 +12,14 @@ ctx.fillStyle = "black"
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 ctx.drawImage(img, 0, 0, 800, 529);
 
-//paths.calculatePath(0, types.pedestrian, 3, false);
+paths.calculatePath(0, types.pedestrian, 3, false);
+paths.spawnCoords.forEach((coord, i) => {
+  paths.drawSpawnPoint(i);
+})
 //paths.drawShops();
-ai.spawn(1, 10000, 0.35);
+ai.spawn(0, 5000, 0.35);
+ai.spawn(1, 5000, 0.35);
+ai.spawn(2, 5000, 0.35);
+ai.spawn(3, 5000, 0.35);
+ai.spawn(4, 5000, 0.35);
+ai.spawn(5, 5000, 0.35);

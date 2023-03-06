@@ -476,6 +476,7 @@ function calculatePathToShop(startPoint, shopPoint) {
   ctx.moveTo(startPoint.point[0], startPoint.point[1]);
   for (let i = 0; i < startPathPoints.length; i++) {
     if (findPathsByPoint(startPathPoints[i]).includes(targetPathIndex)) {
+      if (!comparePoints(startPathPoints[i], targetPathPoints[0])) targetPathPoints.reverse();
       for (let s = 0; s < targetPathPoints.length; s++) {
         ctx.lineTo(targetPathPoints[s][0], targetPathPoints[s][1]);
         if (comparePoints(targetShopPoint, targetPathPoints[s])) {
@@ -570,6 +571,7 @@ export default {
   shopCoords,
   intersections,
   drawShops,
+  drawSpawnPoint,
   calculatePath,
   calculatePathToShop,
 };
